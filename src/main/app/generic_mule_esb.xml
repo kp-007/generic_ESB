@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.7.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+      <http:listener-config doc:name="HTTP Listener Configuration" host="0.0.0.0" name="HTTP_Listener_Configuration" port="9090"/>
+
+    <flow name="MainRoutingFlow">
+        <http:listener allowedMethods="GET" config-ref="HTTP_Listener_Configuration" doc:name="HTTP" path="/"/>
+        <set-payload doc:name="Set Original Payload" value="#[message.inboundProperties['http.query.params']['url_key']]"/>
+
+        <flow-ref doc:name="exampleFlow2" name="SubFlow"/>
+
+
+        <choice doc:name="Choice">
+            <when expression="#[flowVars['my_variable'].equals('var_value_1')]">
+                <set-payload doc:name="Set Response Payload" value="#['response_payload_1']"/>
+                <logger message="#[payload]" level="INFO" category="development_logger" doc:name="Logger"/>
+            </when>
+            <otherwise>
+                <set-payload doc:name="Set Response Payload" value="#['response_payload_2']"/>
+                <logger message="#[payload]" level="INFO" category="development_logger" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <flow name="SubFlow">
+        <choice doc:name="Choice">
+            <when expression="#['payload_1'.equals(payload)]">
+                <flow-ref doc:name="First Level" name="First_Level_Flow"/>
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Second_Level" name="Second_Level_Flow"/>
+            </otherwise>
+        </choice>
+	</flow>
+
+    <sub-flow name="First_Level_Flow">
+        <set-variable doc:name="my_variable" value="#['var_value_1']" variableName="my_variable"/>
+    </sub-flow>
+
+    <sub-flow name="Second_Level_Flow">
+        <set-variable doc:name="my_variable" value="#['var_value_2']" variableName="my_variable"/>
+    </sub-flow>
+</mule>
